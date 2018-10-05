@@ -1,6 +1,7 @@
 #ifndef node_h
 #define node_h
 #include <math.h>
+#include <limits.h>
 template <class T>
 struct Node
 {
@@ -61,7 +62,52 @@ private:
 		root->height = max(Height(root->left), Height(root->right)) +1; // update height after balance
 		return root;
 	};
+	Node<T>* DeleteNodeOfTree(T data, Node<T>* &root)
+    {
+    	if(root == 0) // Base case: If the tree is empty
+    		return root;
+    	if(data < root->data)
+    		root->left = DeleteNodeOfTree(data, root->left);
+    	else if(data > root->data)
+    		root->right =  DeleteNodeOfTree(data, root->right);
+    	else
+    	{
+      		// node with only on child or no child
+    		if(root->left == 0)
+    		{
+    			Node<T> *temp = root;
+    			root = root->right;
+         		delete temp;
+         		return root;
+         	}
+    		else if(root->right == 0)
+    		{
+    			Node<T> *temp = root;
+    			root = root->left;
+    			delete temp;
+    			return root;
+    		}    		// node with two child: find min in right subtree;
+    		root->data = FindMin(root->right);
+    		root->right = DeleteNodeOfTree(root->data, root->right); 
+    	}
 
+    	root->height = max(Height(root->left),Height(root->right)) + 1;
+    	int balance = GetBalance(root);
+    	// single right rotate (left left)
+    	if(balance > 1 && GetBalance(root->left) >= 0)
+    		return SingleRightRotate(root);
+    	// double right rotate (left right)
+    	if(balance > 1 && GetBalance(root->left) < 0)
+    		return DoubleRightRotate(root);
+    	// single left rotate (right right)
+    	if(balance < -1 && GetBalance(root->right) <= 0)
+    		return SingleLeftRotate(root);
+    	// double left rotate (right left)
+    	if(balance < -1 && GetBalance(root->right) > 0)
+    		return DoubleLeftRotate(root);
+    	return root;
+    };
+	
 	Node<T>* SingleRightRotate(Node<T>* &root)
 	{
 		Node<T>* u = root->left;
@@ -102,7 +148,7 @@ private:
 		
 	};
 
-	int GetBalance(Node<T> *root) const
+	int GetBalance(Node<T> *root)
 	{
 		if(root == NULL)
 			return 0;
@@ -127,7 +173,15 @@ private:
 	        Preorder(root->right);
 	    }
 	};
+	T FindMin(Node<T>* root)
+	{
+		if(root == 0)
+			return INT_MIN;
+		if(root->left != 0)
+			return FindMin(root->left);
+		return root->data;
 
+	}
 public:
 	TreeAVL()
 	{
@@ -146,6 +200,10 @@ public:
 	{
 		Preorder(root);
 		cout<<endl;
+	};
+	void DeleteNodeOfTree(T data)
+	{
+		root = DeleteNodeOfTree(data,root);
 	};
 };
 #endif
